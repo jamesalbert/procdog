@@ -267,7 +267,7 @@ def _recv_msg(sock):
     '''Receive a (short) newline-delimited command. Trims whitespace.'''
     data = ""
     while True:
-        more_data = sock.recv(1024)
+        more_data = sock.recv(1024).decode('utf-8')
         data += more_data
         if not more_data or more_data.find(EOM) >= 0:
             break
@@ -313,7 +313,7 @@ class _HandleThread(Thread):
                 cmd = _recv_msg(connection)
                 _debug("monitor: received command '%s'" % cmd)
                 response = self.handler(cmd)
-                connection.sendall(response + EOM)
+                connection.sendall((response + EOM).encode('utf-8'))
             except:
                 # Catch anything not already caught by the handler (e.g. a broken pipe on send).
                 failure_count += 1
@@ -431,8 +431,8 @@ def daemonize(home_dir="/", umask=0o77, do_redirect=True, stdout=None, stderr=No
         sys.stdout.flush()
         sys.stderr.flush()
 
-        so = file(stdout, 'a+') if stdout else _NULL_OUTPUT
-        se = file(stderr, 'a+', 0) if stderr else so
+        so = open(stdout, 'a+') if stdout else _NULL_OUTPUT
+        se = open(stderr, 'a+', 0) if stderr else so
 
         os.dup2(_NULL_INPUT.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
@@ -539,7 +539,7 @@ def send_command(proc_name, cmd):
         sock.connect(SOCKET_PATH_PAT % proc_name)
         _debug("client: connected")
         sock.settimeout(SEND_TIMEOUT)
-        sock.sendall(cmd + EOM)
+        sock.sendall((cmd + EOM).encode('utf-8'))
         data = _recv_msg(sock)
         if not data:
             # A rare race or a bug.
@@ -771,7 +771,7 @@ def main():
         }
 
         # Precedence on options is command line, then file, then defaults.
-        default_options = vars(OPTION_DEFAULTS)
+        default_options = OPTION_DEFAULTS._asdict()
 
         combined = default_options.copy()
         combined.update(file_options)
