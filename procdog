@@ -744,15 +744,11 @@ def main():
     parser.add_argument("--shell", help="use shell to fully parse/execute the command string", action="store_true")
     parser.add_argument("--config", help="non-default location on config file to read")
     parser.add_argument("--debug", help="enable debugging output", action="store_true")
-    parser.add_argument("--version", help="show version", action="store_true")
+    parser.add_argument('--version', action='version', version=f'procdog {VERSION}')
     args = parser.parse_args()
 
     global DEBUG
     DEBUG = args.debug
-
-    if args.version:
-        print(VERSION)
-        sys.exit(0)
 
     try:
         config_file = args.config if args.config else _locate_config_file()
