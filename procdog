@@ -21,13 +21,13 @@ For further documentation, see: https://github.com/jlevy/procdog
 # Author: Joshua Levy
 # Created: 2015-03-14
 
-from __future__ import print_function
-import socket, sys, os, errno, time, shlex, ConfigParser, argparse, re, traceback
+
+import socket, sys, os, errno, time, shlex, configparser, argparse, re, traceback
 from collections import namedtuple
 from string import Template
 from datetime import datetime
 from threading import Thread, Lock
-from Queue import Queue
+from queue import Queue
 # The subprocess module has known threading issues, so prefer subprocess32.
 try:
     import subprocess32 as subprocess
@@ -397,7 +397,7 @@ def _open_logfile(filename, write_mode, proc_name, log_options=None):
     return f
 
 
-def daemonize(home_dir="/", umask=077, do_redirect=True, stdout=None, stderr=None):
+def daemonize(home_dir="/", umask=0o77, do_redirect=True, stdout=None, stderr=None):
     '''Do a standard double fork to daemonize. Based on portions of:
      http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/www.boxedice.com
      https://github.com/serverdensity/python-daemon
@@ -408,7 +408,7 @@ def daemonize(home_dir="/", umask=077, do_redirect=True, stdout=None, stderr=Non
         pid = os.fork()
         if pid > 0:
             return False
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -422,7 +422,7 @@ def daemonize(home_dir="/", umask=077, do_redirect=True, stdout=None, stderr=Non
         pid = os.fork()
         if pid > 0:
             sys.exit(0)  # Exit second parent.
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -665,13 +665,13 @@ def _read_config_file(proc_name, config_file, target_types):
     out = {}
     try:
         if config_file:
-            config = ConfigParser.RawConfigParser()
+            config = configparser.RawConfigParser()
             config.read(config_file)
             for (key, str_value) in config.items(proc_name):
                 if key not in Options._fields:
                     raise ValueError("unrecognized config key: '%s' in '%s'" % (key, config_file))
                 out[key] = _parse_config(config, proc_name, key, target_types[key])
-    except ConfigParser.NoSectionError:
+    except configparser.NoSectionError:
         pass
     return out
 
@@ -754,7 +754,7 @@ def main():
 
         # XXX Hack to reuse argparse's internal actions list, to avoid repeating ourselves when parsing out data types from the config file.
         actions = {action.dest: action for action in parser._actions if action.dest in Options._fields}
-        target_types = {action.dest: (action.type or type(action.const or "")) for action in actions.values()}
+        target_types = {action.dest: (action.type or type(action.const or "")) for action in list(actions.values())}
 
         file_options = _read_config_file(args.proc_name, config_file, target_types)
 
@@ -765,7 +765,7 @@ def main():
         # These are only the options that were explicitly set.
         command_line_options = {
             key: val
-            for (key, val) in vars(args).items()
+            for (key, val) in list(vars(args).items())
             if key in Options._fields and val is not None and was_explicitly_set(actions[key], val)
         }
 
