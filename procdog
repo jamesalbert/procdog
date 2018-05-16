@@ -719,7 +719,7 @@ OPTION_DEFAULTS = Options(command=None,
 
 
 def main():
-    parser = argparse.ArgumentParser(description=DESCRIPTION, version=VERSION, epilog="\n" + __doc__)
+    parser = argparse.ArgumentParser(description=DESCRIPTION, epilog="\n" + __doc__)
     parser.add_argument("control_cmd", help="control command", choices=CMD_LIST)
     parser.add_argument("proc_name", help="unique alphanumeric name for this process")
     parser.add_argument("-c", "--command",
@@ -744,10 +744,15 @@ def main():
     parser.add_argument("--shell", help="use shell to fully parse/execute the command string", action="store_true")
     parser.add_argument("--config", help="non-default location on config file to read")
     parser.add_argument("--debug", help="enable debugging output", action="store_true")
+    parser.add_argument("--version", help="show version", action="store_true")
     args = parser.parse_args()
 
     global DEBUG
     DEBUG = args.debug
+
+    if args.version:
+        print(VERSION)
+        sys.exit(0)
 
     try:
         config_file = args.config if args.config else _locate_config_file()
